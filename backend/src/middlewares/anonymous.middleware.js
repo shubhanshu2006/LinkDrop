@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 
@@ -21,13 +20,24 @@ export const anonymousAuth = asyncHandler(async (req, res, next) => {
         return next();
       }
     } catch {
-      // ignore invalid token, fall back to anonymous
+      // invalid token, continue as anonymous
     }
   }
 
-  // Create anonymous user
-  const anonymousUser = await User.create({
-    isAnonymous: true,
+  // No valid token create anonymous user
+  const anonymousUser = await User.create({ isAnonymous: true });
+
+  // Issue short-lived access token for anonymous user
+  const anonToken = jwt.sign(
+    { _id: anonymousUser._id },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  res.cookie("accessToken", anonToken, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
   });
 
   req.user = anonymousUser;
