@@ -17,6 +17,9 @@ const userSchema = new mongoose.Schema(
       trim: true,
       minlength: 2,
       maxlength: 100,
+      required: function () {
+        return !this.isAnonymous;
+      },
     },
 
     password: {
@@ -25,6 +28,12 @@ const userSchema = new mongoose.Schema(
 
     refreshToken: {
       type: String,
+    },
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
 
     isAnonymous: {
