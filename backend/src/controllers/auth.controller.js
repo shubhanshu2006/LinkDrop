@@ -392,7 +392,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${process.env.BACKEND_URL}/api/v1/auth/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/api/v1/auth/reset-password?token=${resetToken}`;
 
   await sendResetPasswordEmail(user.email, user.fullName, resetUrl);
 

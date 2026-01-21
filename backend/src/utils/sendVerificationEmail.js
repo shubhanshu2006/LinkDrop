@@ -71,7 +71,7 @@ const emailTemplate = (verificationUrl, fullName) => `
 `;
 
 export const sendVerificationEmail = async (email, fullName, token) => {
-  const verificationUrl = `${process.env.BACKEND_URL}/api/v1/auth/verify-email?token=${token}`;
+  const verificationUrl = `${process.env.FRONTEND_URL}/api/v1/auth/verify-email?token=${token}`;
 
   try {
     await transactionalEmailApi.sendTransacEmail({
