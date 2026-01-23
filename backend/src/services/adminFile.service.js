@@ -16,7 +16,6 @@ export const listAllFiles = async ({
 
   if (status === "active") {
     query.isDisabled = false;
-    query.scanStatus = "clean";
     query.linkExpiresAt = { $gt: now };
   }
 
@@ -29,10 +28,6 @@ export const listAllFiles = async ({
 
   if (status === "disabled") {
     query.isDisabled = true;
-  }
-
-  if (status === "infected") {
-    query.scanStatus = "infected";
   }
 
   const sortOptions =

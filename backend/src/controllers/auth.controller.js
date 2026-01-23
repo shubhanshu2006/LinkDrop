@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { File } from "../models/file.model.js";
 import { generateAccessAndRefreshTokens } from "../services/auth.service.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -41,7 +42,20 @@ const registerUser = asyncHandler(async (req, res) => {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_])[A-Za-z\d@$!%*?&#_]{8,}$/;
 
   if (!passwordRegex.test(password)) {
-    throw new ApiError(400, "Password does not meet complexity requirements");
+    
+    const errors = [];
+    if (password.length < 8) errors.push("at least 8 characters");
+    if (!/[a-z]/.test(password)) errors.push("one lowercase letter");
+    if (!/[A-Z]/.test(password)) errors.push("one uppercase letter");
+    if (!/\d/.test(password)) errors.push("one number");
+    if (!/[@$!%*?&#_]/.test(password)) errors.push("one special character");
+
+    const message =
+      errors.length > 0
+        ? `Password must contain ${errors.join(", ")}`
+        : "Password does not meet security requirements";
+
+    throw new ApiError(400, message);
   }
 
   // Hash the password
@@ -96,7 +110,10 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new ApiError(401, "Invalid email or password");
+    throw new ApiError(
+      401,
+      "No account found with this email address. Please register first."
+    );
   }
 
   if (user.isAnonymous) {
@@ -106,7 +123,10 @@ const loginUser = asyncHandler(async (req, res) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid email or password");
+    throw new ApiError(
+      401,
+      "Incorrect password. Please try again or reset your password."
+    );
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
@@ -128,6 +148,7 @@ const loginUser = asyncHandler(async (req, res) => {
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
     })
+    .clearCookie("anonAccessToken") // Clear anonymous token on login
     .json(
       new ApiResponse(
         200,
@@ -162,6 +183,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .clearCookie("refreshToken", options)
+    .clearCookie("anonAccessToken") // Clear anonymous token on logout
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
@@ -182,7 +204,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const claimAnonFiles = asyncHandler(async (req, res) => {
   const anonUser = req.user;
-  const { email, password } = req.body;
+  const { email, password, fullName } = req.body;
 
   //  Safety check
   if (!anonUser) {
@@ -190,8 +212,8 @@ const claimAnonFiles = asyncHandler(async (req, res) => {
   }
 
   //  Validate input
-  if (!email || !password) {
-    throw new ApiError(400, "Email and password are required");
+  if (!email || !password || !fullName) {
+    throw new ApiError(400, "Email, password and full name are required");
   }
 
   //  Ensure user is anonymous
@@ -208,9 +230,10 @@ const claimAnonFiles = asyncHandler(async (req, res) => {
   //  Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  //  Convert anonymous → registered
+  //  Convert anonymous to registered
   anonUser.email = email;
   anonUser.password = hashedPassword;
+  anonUser.fullName = fullName;
   anonUser.isAnonymous = false;
 
   await anonUser.save({ validateBeforeSave: false });
@@ -233,6 +256,7 @@ const claimAnonFiles = asyncHandler(async (req, res) => {
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
     })
+    .clearCookie("anonAccessToken") // Clear anonymous token after claiming files
     .json(
       new ApiResponse(
         200,
@@ -307,15 +331,8 @@ const verifyEmail = asyncHandler(async (req, res) => {
   // Remove pending user
   await PendingUser.deleteOne({ _id: pendingUser._id });
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        {},
-        "Email verified successfully. You can now log in."
-      )
-    );
+  // Redirect to frontend with success message
+  res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
 });
 
 const changePassword = asyncHandler(async (req, res) => {
@@ -392,7 +409,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${process.env.FRONTEND_URL}/api/v1/auth/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   await sendResetPasswordEmail(user.email, user.fullName, resetUrl);
 
@@ -402,11 +419,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token } = req.query;
-  const { newPassword } = req.body;
+  const { token, password } = req.body;
 
-  if (!token || !newPassword) {
-    throw new ApiError(400, "Token and new password are required");
+  if (!token || !password) {
+    throw new ApiError(400, "Token and password are required");
   }
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -423,14 +439,11 @@ const resetPassword = asyncHandler(async (req, res) => {
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_])[A-Za-z\d@$!%*?&#_]{8,}$/;
 
-  if (!passwordRegex.test(newPassword)) {
-    throw new ApiError(
-      400,
-      "New password does not meet complexity requirements"
-    );
+  if (!passwordRegex.test(password)) {
+    throw new ApiError(400, "Password does not meet complexity requirements");
   }
 
-  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  const hashedNewPassword = await bcrypt.hash(password, 10);
 
   user.password = hashedNewPassword;
   user.resetPasswordToken = undefined;
@@ -444,6 +457,69 @@ const resetPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password has been reset successfully"));
 });
 
+// Check if anonymous user has files
+const checkAnonymousFiles = asyncHandler(async (req, res) => {
+  const { anonymousToken } = req.body;
+
+  if (!anonymousToken) {
+    throw new ApiError(400, "Anonymous token is required");
+  }
+
+  // Decode the anonymous token to get the anonymous user ID
+  let anonymousUserId;
+
+  try {
+    const decoded = jwt.verify(anonymousToken, process.env.ACCESS_TOKEN_SECRET);
+    anonymousUserId = decoded._id;
+  } catch (error) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          hasFiles: false,
+          fileCount: 0,
+          anonymousUserExists: false,
+        },
+        "Invalid or expired anonymous token"
+      )
+    );
+  }
+
+  // Check if anonymous user exists
+  const anonymousUser = await User.findById(anonymousUserId);
+
+  if (!anonymousUser || !anonymousUser.isAnonymous) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          hasFiles: false,
+          fileCount: 0,
+          anonymousUserExists: false,
+        },
+        "Anonymous user not found or files already merged"
+      )
+    );
+  }
+
+  // Count files owned by anonymous user
+  const fileCount = await File.countDocuments({ owner: anonymousUserId });
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        hasFiles: fileCount > 0,
+        fileCount,
+        anonymousUserExists: true,
+      },
+      fileCount > 0
+        ? `Found ${fileCount} file(s) to merge`
+        : "No files to merge"
+    )
+  );
+});
+
 export {
   registerUser,
   loginUser,
@@ -455,4 +531,5 @@ export {
   changePassword,
   forgotPassword,
   resetPassword,
+  checkAnonymousFiles,
 };

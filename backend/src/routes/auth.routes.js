@@ -10,7 +10,9 @@ import {
   changePassword,
   forgotPassword,
   resetPassword,
+  checkAnonymousFiles,
 } from "../controllers/auth.controller.js";
+import { mergeAnonymousFiles } from "../controllers/mergeAnonymousFiles.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { anonymousAuth } from "../middlewares/anonymous.middleware.js";
 
@@ -29,6 +31,12 @@ router.route("/me").get(verifyJWT, getCurrentUser);
 
 // Claim anonymous files
 router.route("/claim-anon-files").post(anonymousAuth, claimAnonFiles);
+
+// Merge anonymous files to logged-in account
+router.route("/merge-anon-files").post(verifyJWT, mergeAnonymousFiles);
+
+// Check if anonymous files exist
+router.route("/check-anon-files").post(checkAnonymousFiles);
 
 // Email verification
 router.route("/verify-email").get(verifyEmail);

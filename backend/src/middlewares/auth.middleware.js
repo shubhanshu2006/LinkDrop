@@ -5,9 +5,10 @@ import { User } from "../models/user.model.js";
 
 // Middleware to verify JWT and protect routes
 export const verifyJWT = asyncHandler(async (req, _, next) => {
+  // Prioritize Authorization header over cookies to prevent anonymous token conflicts
   const token =
-    req.cookies?.accessToken ||
-    req.header("Authorization")?.replace("Bearer ", "");
+    req.header("Authorization")?.replace("Bearer ", "") ||
+    req.cookies?.accessToken;
 
   if (!token) {
     throw new ApiError(401, "Unauthorized request");
