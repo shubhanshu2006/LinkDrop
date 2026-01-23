@@ -30,6 +30,10 @@ export const verifyOtpForFile = async (file, otp, openDurationMinutes) => {
     throw new ApiError(400, "OTP has expired");
   }
 
+  if (!openDurationMinutes || openDurationMinutes <= 0) {
+    throw new ApiError(400, "Invalid open duration");
+  }
+
   const hashedInput = crypto.createHash("sha256").update(otp).digest("hex");
 
   if (hashedInput !== file.otpHash) {

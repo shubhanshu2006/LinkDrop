@@ -11,7 +11,6 @@ import {
 } from "../services/fileOtp.service.js";
 import { sendOtpEmail } from "../utils/sendOtpMail.js";
 import { listUserFiles } from "../services/file.service.js";
-import { scanFileForViruses } from "../services/virusScan.service.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -58,15 +57,10 @@ const uploadFileController = asyncHandler(async (req, res) => {
     fileType,
     linkExpiresAt: expiresAt,
     allowedEmail,
+    openDuration: openDuration ? parseInt(openDuration) : undefined,
     downloadAllowed,
     offlineAllowed,
   });
-
-  // Scan file for viruses asynchronously
-  scanFileForViruses(
-    file._id,
-    path.join(req.file.destination, req.file.filename)
-  );
 
   res.status(201).json(
     new ApiResponse(201, {
@@ -117,35 +111,79 @@ const getFile = asyncHandler(async (req, res) => {
   stream.pipe(res);
 });
 
+// Controller to get file metadata (info)
+const getFileInfo = asyncHandler(async (req, res) => {
+  const file = req.fileDoc; // attached by fileAccessGuard
+  const user = req.user;
+
+  const intent = "info";
+
+  const decision = canAccessFile({
+    file,
+    user,
+    intent,
+  });
+
+  if (!decision.allowed) {
+    throw new ApiError(403, "Access denied");
+  }
+
+  // Return file metadata
+  res.status(200).json(
+    new ApiResponse(200, {
+      file: {
+        _id: file._id,
+        originalName: file.originalName,
+        mimeType: file.mimeType,
+        size: file.size,
+        fileType: file.fileType,
+        downloadAllowed: file.downloadAllowed,
+        offlineAllowed: file.offlineAllowed,
+        linkExpiresAt: file.linkExpiresAt,
+        uploadedBy: file.owner,
+        accessCount: file.accessCount,
+        lastAccessedAt: file.lastAccessedAt,
+        otpVerifiedAt: file.otpVerifiedAt,
+        isOpened: file.isOpened,
+        accessEndsAt: file.accessEndsAt,
+        allowedEmail: file.allowedEmail,
+        openDuration: file.openDuration,
+      },
+    })
+  );
+});
+
 // Controller to handle OTP request
 const requestFileOtp = asyncHandler(async (req, res) => {
   const file = req.fileDoc;
-  const user = req.user;
 
   if (file.fileType !== "verySensitive") {
     throw new ApiError(400, "OTP not required for this file");
   }
 
-  if (!user?.email || user.email.toLowerCase() !== file.allowedEmail) {
-    throw new ApiError(403, "You are not allowed to request OTP for this file");
-  }
-
+ 
   const otp = await generateOtpForFile(file);
 
   await sendOtpEmail(file.allowedEmail, otp);
 
-  res.status(200).json({
-    message: "OTP sent to registered email",
-  });
+  res
+    .status(200)
+    .json(new ApiResponse(200, {}, `OTP sent to ${file.allowedEmail}`));
 });
 
 // Controller to handle OTP verification
 const verifyFileOtp = asyncHandler(async (req, res) => {
-  const file = req.fileDoc;
+  const { fileId } = req.params;
   const { otp } = req.body;
 
   if (!otp) {
     throw new ApiError(400, "OTP is required");
+  }
+
+  const file = await File.findById(fileId).select("+otpHash");
+
+  if (!file) {
+    throw new ApiError(404, "File not found");
   }
 
   if (file.fileType !== "verySensitive") {
@@ -164,14 +202,24 @@ const verifyFileOtp = asyncHandler(async (req, res) => {
 const downloadFile = asyncHandler(async (req, res) => {
   const file = req.fileDoc;
   const user = req.user;
+  const intent = req.query.intent || "download"; // Can be "download" or "offline"
 
   const decision = canAccessFile({
     file,
     user,
-    intent: "download",
+    intent,
   });
 
-  if (!decision.allowed || !decision.downloadAllowed) {
+  // For offline intent on sensitive files, allow access
+  if (intent === "offline" && !decision.offlineAllowed) {
+    throw new ApiError(403, "Offline save is not allowed for this file");
+  }
+
+  // For download intent, check downloadAllowed
+  if (
+    intent === "download" &&
+    (!decision.allowed || !decision.downloadAllowed)
+  ) {
     throw new ApiError(403, "Download is not allowed for this file");
   }
 
@@ -213,7 +261,9 @@ const deleteFile = asyncHandler(async (req, res) => {
   if (!file) {
     throw new ApiError(404, "File not found");
   }
-  await file.remove();
+
+  // Use deleteOne() instead of deprecated remove()
+  await file.deleteOne();
 
   const filePath = path.join(
     process.cwd(),
@@ -223,7 +273,7 @@ const deleteFile = asyncHandler(async (req, res) => {
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
   }
-  res.status(200).json(new ApiResponse(200, { message: "File deleted" }));
+  res.status(200).json(new ApiResponse(200, {}, "File deleted successfully"));
 });
 
 // Controller to handle file settings update
@@ -272,6 +322,7 @@ const listMyFiles = asyncHandler(async (req, res) => {
 export {
   uploadFileController,
   getFile,
+  getFileInfo,
   deleteFile,
   updateFileSettings,
   requestFileOtp,

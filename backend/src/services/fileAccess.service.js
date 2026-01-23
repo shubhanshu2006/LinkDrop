@@ -48,14 +48,22 @@ export const canAccessFile = ({ file, user, intent = "view" }) => {
   }
 
   if (file.fileType === "verySensitive") {
-    if (!user?.email || user.email.toLowerCase() !== file.allowedEmail) {
-      throw new ApiError(403, "You are not allowed to access this file");
+    
+    if (intent === "info") {
+      return {
+        allowed: true,
+        downloadAllowed: false,
+        offlineAllowed: false,
+        requiresOTP: !file.otpVerifiedAt,
+      };
     }
 
+    // For view/download/offline, check if OTP has been verified
     if (!file.otpVerifiedAt) {
       throw new ApiError(401, "OTP verification required");
     }
 
+    // Check if access window is still valid
     if (!file.accessEndsAt || file.accessEndsAt <= now) {
       throw new ApiError(423, "Access window has expired");
     }

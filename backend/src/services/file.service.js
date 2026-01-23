@@ -20,7 +20,6 @@ export const listUserFiles = async ({
   // Status filters
   if (status === "active") {
     query.isDisabled = false;
-    query.scanStatus = "clean";
     query.linkExpiresAt = { $gt: now };
   }
 
@@ -33,10 +32,6 @@ export const listUserFiles = async ({
 
   if (status === "disabled") {
     query.isDisabled = true;
-  }
-
-  if (status === "infected") {
-    query.scanStatus = "infected";
   }
 
   // Sorting

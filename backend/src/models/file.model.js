@@ -53,6 +53,11 @@ const fileSchema = new mongoose.Schema(
       trim: true,
     },
 
+    openDuration: {
+      type: Number,
+      // Duration in minutes for how long the file can be accessed after OTP verification
+    },
+
     otpHash: {
       type: String,
       select: false,
@@ -114,12 +119,6 @@ const fileSchema = new mongoose.Schema(
     },
 
     // File Security and Moderation
-    scanStatus: {
-      type: String,
-      enum: ["pending", "clean", "infected"],
-      default: "pending",
-    },
-
     isDisabled: {
       type: Boolean,
       default: false,

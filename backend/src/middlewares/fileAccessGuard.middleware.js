@@ -20,14 +20,6 @@ export const fileAccessGuard = asyncHandler(async (req, res, next) => {
     throw new ApiError(403, file.disabledReason || "This file is disabled");
   }
 
-  if (file.scanStatus === "pending") {
-    throw new ApiError(423, "This file is pending a virus scan");
-  }
-
-  if (file.scanStatus === "infected") {
-    throw new ApiError(410, "This file is infected and cannot be accessed");
-  }
-
   const now = new Date();
 
   if (file.linkExpiresAt && file.linkExpiresAt <= now) {

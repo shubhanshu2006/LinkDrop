@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   uploadFileController,
   getFile,
+  getFileInfo,
   deleteFile,
   updateFileSettings,
   requestFileOtp,
@@ -20,6 +21,12 @@ const router = Router();
 router
   .route("/upload")
   .post(anonymousAuth, uploadFile.single("file"), uploadFileController);
+
+// Route for listing user's files
+router.route("/my").get(verifyJWT, listMyFiles);
+
+// Route for file metadata (info)
+router.route("/:fileId/info").get(anonymousAuth, fileAccessGuard, getFileInfo);
 
 // Route for file access and management
 router.route("/:fileId").get(anonymousAuth, fileAccessGuard, getFile);
@@ -44,8 +51,5 @@ router.route("/:fileId").delete(verifyJWT, deleteFile);
 
 // Route for updating file settings
 router.route("/:fileId/settings").patch(verifyJWT, updateFileSettings);
-
-// Route for listing user's files
-router.route("/my").get(verifyJWT, listMyFiles);
 
 export default router;
