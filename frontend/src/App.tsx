@@ -22,6 +22,7 @@ import { OfflineFiles } from "./pages/OfflineFiles";
 import { Settings } from "./pages/Settings";
 import { useAuthStore } from "./store/authStore";
 import { startAutoCleanup } from "./utils/indexedDB";
+import { Analytics } from "@vercel/analytics/react"
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -132,6 +133,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
+        <Analytics />
         <Toaster
           position="top-right"
           toastOptions={{
