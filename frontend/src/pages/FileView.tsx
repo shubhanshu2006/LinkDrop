@@ -39,6 +39,7 @@ export const FileView: React.FC = () => {
 
   useEffect(() => {
     if (fileId) {
+      setIsLoading(true);
       fetchFile();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +86,6 @@ export const FileView: React.FC = () => {
 
   const fetchFile = async () => {
     try {
-      setIsLoading(true);
       const response = await fileAPI.getFile(fileId!);
       setFile(response.data.file);
 
@@ -130,11 +130,10 @@ export const FileView: React.FC = () => {
       await fileAPI.verifyOTP(fileId!, otp);
       toast.success("OTP verified! You can now access the file");
       setShowOTPModal(false);
-      fetchFile();
+      await fetchFile();
     } catch (error) {
       const apiError = error as ApiError;
       toast.error(apiError.response?.data?.message || "Invalid OTP");
-    } finally {
       setIsVerifying(false);
     }
   };
