@@ -29,8 +29,9 @@ export const Admin: React.FC = () => {
       setHasError(false);
       const response = await adminAPI.listFiles();
       console.log("Admin files response:", response);
-     
-      const filesList = response.data?.data?.files || response.data?.files || [];
+
+      const filesList =
+        response.data?.data?.files || response.data?.files || [];
       console.log("Parsed files:", filesList);
       setFiles(filesList);
     } catch (error) {
@@ -93,8 +94,6 @@ export const Admin: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 bg-dark-950">
-      {console.log("Rendering Admin - isLoading:", isLoading, "files:", files.length, "hasError:", hasError)}
-      
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent-500/10 rounded-full blur-3xl"></div>
@@ -121,15 +120,26 @@ export const Admin: React.FC = () => {
           <div className="text-center py-12">
             <div className="glass-effect rounded-2xl p-12 max-w-md mx-auto">
               <div className="text-red-500 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-16 h-16 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-dark-100 mb-2">
                 Failed to Load Files
               </h3>
               <p className="text-dark-400 mb-4">
-                There was an error loading the files. Please check the console for details.
+                There was an error loading the files. Please check the console
+                for details.
               </p>
               <Button variant="primary" onClick={fetchFiles}>
                 Try Again
@@ -178,8 +188,14 @@ export const Admin: React.FC = () => {
                           )}
                         </div>
                         <div className="text-sm text-dark-400">
-                        Owner: {file.owner?.fullName || file.owner?.email || "Anonymous"}
+                          Owner:{" "}
+                          {typeof file.owner === "string"
+                            ? file.owner
+                            : file.owner?.fullName ||
+                              file.owner?.email ||
+                              "Anonymous"}
                         </div>
+
                         {file.disabledReason && (
                           <div className="text-sm text-red-400 mt-1">
                             Reason: {file.disabledReason}
@@ -193,7 +209,9 @@ export const Admin: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         icon={Eye}
-                        onClick={() => window.open(`/file/${file._id}`, '_blank')}
+                        onClick={() =>
+                          window.open(`/file/${file._id}`, "_blank")
+                        }
                       >
                         View
                       </Button>

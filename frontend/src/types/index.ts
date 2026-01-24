@@ -2,7 +2,14 @@
 
 export interface FileData {
   _id: string;
-  owner: string;
+  owner?:
+    | {
+        fullName?: string;
+        email?: string;
+      }
+    | string
+    | null;
+
   originalName: string;
   storageName: string;
   mimeType: string;
