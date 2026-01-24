@@ -33,7 +33,7 @@ export const FileView: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRequestingOTP, setIsRequestingOTP] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [openedWindow, setOpenedWindow] = useState<Window | null>(null);
+  const [openedWindow] = useState<Window | null>(null);
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -160,13 +160,9 @@ export const FileView: React.FC = () => {
     }
   };
 
-    const handleViewFile = () => {
+  const handleViewFile = () => {
     if (!fileId) return;
-    const viewUrl = `${import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1"}/files/${fileId}`;
-    const newWindow = window.open(viewUrl, "_blank");
-    if (newWindow) {
-      setOpenedWindow(newWindow);
-    }
+    window.open(`/file/${fileId}`, "_blank");
   };
 
   const handleSaveOffline = () => {
