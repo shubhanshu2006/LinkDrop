@@ -88,6 +88,9 @@ export const FileView: React.FC = () => {
     try {
       const response = await fileAPI.getFile(fileId!);
       console.log("File Data Response:", response);
+      console.log("File object:", response.data.file);
+      console.log("OTP Verified:", response.data.file.otpVerifiedAt);
+      console.log("Access Ends:", response.data.file.accessEndsAt);
       setFile(response.data.file);
 
       if (
@@ -103,6 +106,7 @@ export const FileView: React.FC = () => {
       navigate("/");
     } finally {
       setIsLoading(false);
+      console.log("fetchFile completed, isLoading set to false");
     }
   };
 
@@ -251,6 +255,7 @@ export const FileView: React.FC = () => {
   };
 
   if (isLoading) {
+    console.log("Rendering loading state");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -262,8 +267,11 @@ export const FileView: React.FC = () => {
   }
 
   if (!file) {
+    console.log("File is null, returning null");
     return null;
   }
+
+  console.log("Rendering file view for:", file.originalName);
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden">
