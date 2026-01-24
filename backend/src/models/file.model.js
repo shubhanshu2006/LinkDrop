@@ -16,6 +16,11 @@ const fileSchema = new mongoose.Schema(
       required: true,
     },
 
+    fileUrl: {
+      type: String,
+      required: true,
+    },
+
     storageName: {
       type: String,
       required: true,

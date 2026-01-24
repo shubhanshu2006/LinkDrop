@@ -2,8 +2,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { File } from "../models/file.model.js";
-import path from "path";
-import fs from "fs";
+import { supabase } from "../config/supabase.js";
+import crypto from "crypto";
 import { canAccessFile } from "../services/fileAccess.service.js";
 import {
   generateOtpForFile,
@@ -11,11 +11,13 @@ import {
 } from "../services/fileOtp.service.js";
 import { sendOtpEmail } from "../utils/sendOtpMail.js";
 import { listUserFiles } from "../services/file.service.js";
+import { Readable } from "stream";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 // Controller to handle file upload
+
 const uploadFileController = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new ApiError(400, "File is required");
@@ -48,10 +50,30 @@ const uploadFileController = asyncHandler(async (req, res) => {
     }
   }
 
+  const sanitizeFilename = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const safeName = sanitizeFilename(req.file.originalname);
+
+  // Upload to Supabase
+  const fileKey = `uploads/${crypto.randomUUID()}-${safeName}`;
+
+  const { error } = await supabase.storage
+    .from("files")
+    .upload(fileKey, req.file.buffer, {
+      contentType: req.file.mimetype,
+      upsert: false,
+    });
+
+  if (error) {
+    throw new ApiError(500, error.message);
+  }
+
+  const { data } = supabase.storage.from("files").getPublicUrl(fileKey);
+
   const file = await File.create({
     owner: req.user._id,
     originalName: req.file.originalname,
-    storageName: req.file.filename,
+    storageName: fileKey,
+    fileUrl: data.publicUrl,
     mimeType: req.file.mimetype,
     size: req.file.size,
     fileType,
@@ -70,45 +92,43 @@ const uploadFileController = asyncHandler(async (req, res) => {
   );
 });
 
-// Controller to handle file access
+// Controller to get file content
 const getFile = asyncHandler(async (req, res) => {
-  const file = req.fileDoc; // attached by fileAccessGuard
+  const file = req.fileDoc;
   const user = req.user;
-
-  const intent = "view";
 
   const decision = canAccessFile({
     file,
     user,
-    intent,
+    intent: "view",
   });
 
   if (!decision.allowed) {
     throw new ApiError(403, "Access denied");
   }
 
-  const filePath = path.join(
-    process.cwd(),
-    "src/uploads/files",
-    file.storageName
-  );
-
-  // Ensure file exists on disk
-  if (!fs.existsSync(filePath)) {
-    throw new ApiError(404, "File data not found");
+  if (file.accessEndsAt && new Date() > file.accessEndsAt) {
+    throw new ApiError(403, "Access window expired");
   }
+
+  const { data, error } = await supabase.storage
+    .from("files")
+    .download(file.storageName);
+
+  if (error || !data) {
+    throw new ApiError(500, "Failed to fetch file from storage");
+  }
+
+  res.setHeader("Content-Type", file.mimeType);
+  res.setHeader("Content-Disposition", "inline");
+  res.setHeader("X-Content-Type-Options", "nosniff");
 
   file.lastAccessedAt = new Date();
   file.accessCount += 1;
   await file.save({ validateBeforeSave: false });
 
-  res.setHeader("Content-Type", file.mimeType);
-  res.setHeader("X-Content-Type-Options", "nosniff");
-
-  res.setHeader("Content-Disposition", "inline");
-
-  const stream = fs.createReadStream(filePath);
-  stream.pipe(res);
+  const buffer = Buffer.from(await data.arrayBuffer());
+  res.send(buffer);
 });
 
 // Controller to get file metadata (info)
@@ -198,47 +218,36 @@ const verifyFileOtp = asyncHandler(async (req, res) => {
 });
 
 // Controller to handle file download
+
 const downloadFile = asyncHandler(async (req, res) => {
   const file = req.fileDoc;
-  const user = req.user;
-  const intent = req.query.intent || "download"; // Can be "download" or "offline"
+  const intent = req.query.intent || "download";
 
   const decision = canAccessFile({
     file,
-    user,
+    user: req.user,
     intent,
   });
 
-  // For offline intent on sensitive files, allow access
   if (intent === "offline" && !decision.offlineAllowed) {
-    throw new ApiError(403, "Offline save is not allowed for this file");
+    throw new ApiError(403, "Offline save not allowed");
   }
 
-  // For download intent, check downloadAllowed
-  if (
-    intent === "download" &&
-    (!decision.allowed || !decision.downloadAllowed)
-  ) {
-    throw new ApiError(403, "Download is not allowed for this file");
+  if (intent === "download" && !decision.downloadAllowed) {
+    throw new ApiError(403, "Download not allowed");
   }
 
-  if (file.maxDownloads !== null && file.accessCount >= file.maxDownloads) {
-    throw new ApiError(403, "Maximum download limit reached");
+  if (file.accessEndsAt && new Date() > file.accessEndsAt) {
+    throw new ApiError(403, "Access window expired");
   }
 
-  const filePath = path.join(
-    process.cwd(),
-    "src/uploads/files",
-    file.storageName
-  );
+  const { data, error } = await supabase.storage
+    .from("files")
+    .download(file.storageName);
 
-  if (!fs.existsSync(filePath)) {
-    throw new ApiError(404, "File not found on server");
+  if (error || !data) {
+    throw new ApiError(500, "Failed to fetch file from storage");
   }
-
-  file.accessCount += 1;
-  file.lastAccessedAt = new Date();
-  await file.save({ validateBeforeSave: false });
 
   res.setHeader("Content-Type", file.mimeType);
   res.setHeader(
@@ -247,8 +256,12 @@ const downloadFile = asyncHandler(async (req, res) => {
   );
   res.setHeader("X-Content-Type-Options", "nosniff");
 
-  const stream = fs.createReadStream(filePath);
-  stream.pipe(res);
+  const buffer = Buffer.from(await data.arrayBuffer());
+  Readable.from(buffer).pipe(res);
+
+  file.lastAccessedAt = new Date();
+  file.accessCount += 1;
+  await file.save({ validateBeforeSave: false });
 });
 
 // Controller to handle file deletion
@@ -261,17 +274,8 @@ const deleteFile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "File not found");
   }
 
-  // Use deleteOne() instead of deprecated remove()
+  await supabase.storage.from("files").remove([file.storageName]);
   await file.deleteOne();
-
-  const filePath = path.join(
-    process.cwd(),
-    "src/uploads/files",
-    file.storageName
-  );
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
   res.status(200).json(new ApiResponse(200, {}, "File deleted successfully"));
 });
 
