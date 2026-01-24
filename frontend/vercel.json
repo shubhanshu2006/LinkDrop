@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/file/:path*",
+      "destination": "https://linkdrop-backend-qipj.onrender.com/api/v1/files/:path*"
+    }
+  ]
+}
