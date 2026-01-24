@@ -12,7 +12,7 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
-    exposedHeaders: ["X-Anonymous-Token"], 
+    exposedHeaders: ["X-Anonymous-Token"],
   })
 );
 

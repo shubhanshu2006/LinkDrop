@@ -295,8 +295,6 @@ Even if link expiry is later, access is permanently revoked.
 - Admin moderation APIs
 - Automatic cleanup of expired files
 
-
-
 ---
 
 ## Use Case Mapping

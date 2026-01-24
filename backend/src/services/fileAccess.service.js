@@ -48,7 +48,6 @@ export const canAccessFile = ({ file, user, intent = "view" }) => {
   }
 
   if (file.fileType === "verySensitive") {
-    
     if (intent === "info") {
       return {
         allowed: true,

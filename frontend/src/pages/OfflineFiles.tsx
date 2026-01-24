@@ -38,7 +38,6 @@ export const OfflineFiles: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Auto-cleanup expired files before loading
       await deleteExpiredFiles();
 
       const allFiles = await getAllOfflineFiles(user?._id);
@@ -57,7 +56,7 @@ export const OfflineFiles: React.FC = () => {
   useEffect(() => {
     loadFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]); // Reload when user changes (login/logout)
+  }, [user]);
 
   const handleDeleteFile = async (id: string) => {
     try {
@@ -105,7 +104,7 @@ export const OfflineFiles: React.FC = () => {
 
       const url = URL.createObjectURL(blobToView);
       window.open(url, "_blank");
-      // Clean up the URL after a delay
+
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
       console.error("Failed to open file:", error);

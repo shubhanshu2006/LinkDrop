@@ -38,7 +38,7 @@ export const DurationModal = ({
       if (isNaN(value) || value <= 0) {
         return;
       }
-      // Convert to minutes
+
       switch (customUnit) {
         case "minutes":
           duration = value;
@@ -79,7 +79,6 @@ export const DurationModal = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          // Backdrop
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -88,7 +87,6 @@ export const DurationModal = ({
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           />
 
-          // Modal content
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -96,7 +94,6 @@ export const DurationModal = ({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-dark-800 rounded-2xl shadow-2xl max-w-md w-full p-6 relative border border-dark-700"
             >
-             // Close button
               <button
                 onClick={handleClose}
                 className="absolute top-4 right-4 text-dark-300 hover:text-white transition-colors"
@@ -105,7 +102,6 @@ export const DurationModal = ({
                 <X size={24} />
               </button>
 
-              // Header
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
                   <Clock className="text-white" size={24} />
@@ -120,13 +116,11 @@ export const DurationModal = ({
                 </div>
               </div>
 
-             // File name display
               <div className="mb-6 p-3 bg-dark-700/50 rounded-lg">
                 <p className="text-sm text-dark-300 mb-1">Saving file:</p>
                 <p className="text-white font-medium truncate">{fileName}</p>
               </div>
 
-             // Preset durations
               <div className="mb-6">
                 <p className="text-sm text-dark-300 mb-3">Quick Select:</p>
                 <div className="grid grid-cols-3 gap-3">
@@ -148,7 +142,6 @@ export const DurationModal = ({
                 </div>
               </div>
 
-              // Custom duration
               <div className="mb-6">
                 <p className="text-sm text-dark-300 mb-3">Custom Duration:</p>
                 <div className="flex gap-3">
@@ -181,7 +174,6 @@ export const DurationModal = ({
                 </div>
               </div>
 
-              // Info message
               <div className="mb-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <p className="text-sm text-blue-300">
                   The file will be stored in your browser and accessible
@@ -190,7 +182,6 @@ export const DurationModal = ({
                 </p>
               </div>
 
-              // Action buttons
               <div className="flex gap-3">
                 <Button
                   onClick={handleClose}

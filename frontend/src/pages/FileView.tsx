@@ -44,7 +44,6 @@ export const FileView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId]);
 
-  // Monitor access expiration for very sensitive files
   useEffect(() => {
     if (
       !file ||
@@ -61,10 +60,8 @@ export const FileView: React.FC = () => {
       const remaining = expiresAt - now;
 
       if (remaining <= 0) {
-        // Clear interval before navigating
         clearInterval(interval);
 
-        // Close the opened file window if it exists
         if (openedWindow && !openedWindow.closed) {
           openedWindow.close();
         }
@@ -79,10 +76,8 @@ export const FileView: React.FC = () => {
       setTimeRemaining(remaining);
     };
 
-    // Check immediately
     checkExpiration();
 
-    // Check every second
     const interval = setInterval(checkExpiration, 1000);
 
     return () => clearInterval(interval);
@@ -94,7 +89,6 @@ export const FileView: React.FC = () => {
       const response = await fileAPI.getFile(fileId!);
       setFile(response.data.file);
 
-      // If very sensitive and not verified, show OTP modal
       if (
         response.data.file.fileType === "verySensitive" &&
         !response.data.file.otpVerifiedAt
@@ -114,7 +108,7 @@ export const FileView: React.FC = () => {
     setIsRequestingOTP(true);
     try {
       await fileAPI.requestOTP(fileId!);
-      // Refresh file data to get updated OTP info
+
       await fetchFile();
       setShowOTPSentModal(true);
     } catch (error) {
@@ -181,7 +175,6 @@ export const FileView: React.FC = () => {
       return;
     }
 
-    // For sensitive files, automatically use file expiry time as offline duration
     if (file.fileType === "sensitive") {
       const now = Date.now();
       const expiryTime = new Date(file.linkExpiresAt).getTime();
@@ -191,7 +184,6 @@ export const FileView: React.FC = () => {
       );
       handleDurationConfirm(durationInMinutes);
     } else {
-      // For normal files, show duration modal to let user select
       setShowDurationModal(true);
     }
   };
@@ -213,7 +205,6 @@ export const FileView: React.FC = () => {
         blobSize: blob.size,
       });
 
-      // Save to IndexedDB with expiry and userId for isolation
       await saveFileOffline(
         fileId!,
         file.originalName,
@@ -221,7 +212,7 @@ export const FileView: React.FC = () => {
         file.size,
         blob,
         durationInMinutes,
-        user?._id // Pass userId to isolate files per user
+        user?._id
       );
 
       const durationText =
@@ -231,7 +222,6 @@ export const FileView: React.FC = () => {
             ? `${Math.round(durationInMinutes / 60)} hour(s)`
             : `${Math.round(durationInMinutes / 1440)} day(s)`;
 
-      // Custom toast with action button
       toast.success(
         (t) => (
           <div className="flex items-center gap-3">
@@ -304,7 +294,7 @@ export const FileView: React.FC = () => {
                 {(file.size / 1024 / 1024).toFixed(2)} MB • {file.mimeType}
               </p>
             </div>
-            // File Details
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="glass-effect-light rounded-xl p-4">
                 <div className="flex items-center mb-2">
@@ -329,8 +319,6 @@ export const FileView: React.FC = () => {
               </div>
             </div>
             <div className="space-y-4">
-              // View File Button - For very sensitive: only shown after OTP
-              verification
               {file.fileType === "verySensitive" ? (
                 file.otpVerifiedAt ? (
                   <>

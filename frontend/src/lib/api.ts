@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
@@ -23,24 +22,21 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Check for anonymous token in response header
     const anonTokenFromHeader = response.headers["x-anonymous-token"];
 
     if (anonTokenFromHeader) {
       localStorage.setItem("anonAccessToken", anonTokenFromHeader);
     }
 
-    // Also save if user is anonymous and has accessToken
     const currentToken = localStorage.getItem("accessToken");
     const user = localStorage.getItem("user");
 
     if (user && currentToken) {
       try {
         const parsedUser = JSON.parse(user);
-        // If user is anonymous, always keep the token saved separately
+
         if (parsedUser.isAnonymous) {
           localStorage.setItem("anonAccessToken", currentToken);
         }
@@ -54,7 +50,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle 401 errors with token refresh, but only if it's not a login/register request
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&

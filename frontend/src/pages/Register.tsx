@@ -34,7 +34,6 @@ export const Register: React.FC = () => {
     setIsLoading(true);
     try {
       if (isAnonymous) {
-        // Claim anonymous files
         await claimAnonFiles(
           formData.email,
           formData.password,
@@ -45,9 +44,8 @@ export const Register: React.FC = () => {
         );
         navigate("/dashboard");
       } else {
-        // Regular registration
         await register(formData.email, formData.password, formData.fullName);
-        // Show success modal
+
         setShowSuccessModal(true);
       }
     } catch (error) {
@@ -60,7 +58,6 @@ export const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl animate-float"></div>
         <div
@@ -180,7 +177,6 @@ export const Register: React.FC = () => {
         </p>
       </motion.div>
 
-      
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => {

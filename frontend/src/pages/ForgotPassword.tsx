@@ -93,7 +93,6 @@ export const ForgotPassword: React.FC = () => {
         </div>
       </motion.div>
 
-     
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => {

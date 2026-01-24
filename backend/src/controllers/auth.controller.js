@@ -42,7 +42,6 @@ const registerUser = asyncHandler(async (req, res) => {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_])[A-Za-z\d@$!%*?&#_]{8,}$/;
 
   if (!passwordRegex.test(password)) {
-    
     const errors = [];
     if (password.length < 8) errors.push("at least 8 characters");
     if (!/[a-z]/.test(password)) errors.push("one lowercase letter");

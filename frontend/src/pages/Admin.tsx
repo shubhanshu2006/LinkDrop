@@ -39,7 +39,7 @@ export const Admin: React.FC = () => {
       console.error("Admin files error:", error);
       setHasError(true);
       toast.error(apiError.response?.data?.message || "Failed to load files");
-      setFiles([]); // Set empty array on error to show empty state
+      setFiles([]);
     } finally {
       setIsLoading(false);
       console.log("Loading finished");

@@ -106,7 +106,6 @@ export const Upload: React.FC = () => {
 
       toast.success("File uploaded successfully!");
 
-      // Copy link to clipboard
       navigator.clipboard.writeText(link);
       toast.success("Share link copied to clipboard!");
     } catch (error) {
@@ -451,7 +450,7 @@ export const Upload: React.FC = () => {
                 className="flex-1"
                 onClick={() => {
                   setShowShareModal(false);
-                  // Reset form
+
                   setFile(null);
                   setFileType("normal");
                   setLinkExpiresAt("");

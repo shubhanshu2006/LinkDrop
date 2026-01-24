@@ -32,21 +32,17 @@ export const Dashboard: React.FC = () => {
     fetchFiles();
   }, []);
 
-  // Separate effect for checking anonymous files that depends on user being loaded
   useEffect(() => {
-    // Only check after user is loaded (not on initial mount when user is null)
     if (user !== null) {
       checkForAnonymousFiles();
     }
-  }, [user]); // Re-run when user changes
+  }, [user]);
 
   const checkForAnonymousFiles = async () => {
-    // Don't show merge prompt for anonymous users
     if (isAnonymous) {
       return;
     }
 
-    // Check if there's an anonymous token in localStorage
     const anonToken = localStorage.getItem("anonAccessToken");
 
     if (!anonToken) {
@@ -54,18 +50,15 @@ export const Dashboard: React.FC = () => {
     }
 
     try {
-      // Check if the anonymous user still exists and has files
       const response = await authAPI.checkAnonFiles(anonToken);
 
       if (response.data.hasFiles && response.data.anonymousUserExists) {
         setAnonFileCount(response.data.fileCount);
         setShowMergePrompt(true);
       } else {
-        // Token is invalid or files already merged, remove it
         localStorage.removeItem("anonAccessToken");
       }
     } catch (error) {
-      // If check fails, remove the token
       localStorage.removeItem("anonAccessToken");
     }
   };
@@ -84,13 +77,12 @@ export const Dashboard: React.FC = () => {
       localStorage.removeItem("anonAccessToken");
       setShowMergePrompt(false);
       setAnonFileCount(0);
-      fetchFiles(); // Refresh the file list
+      fetchFiles();
     } catch (error) {
       const apiError = error as ApiError;
       const errorMessage =
         apiError.response?.data?.message || "Failed to merge files";
 
-      // If files were already merged or anonymous user not found, clean up
       if (
         errorMessage.includes("not found") ||
         errorMessage.includes("already merged") ||
@@ -121,7 +113,7 @@ export const Dashboard: React.FC = () => {
       setIsInitialLoad(false);
     } catch (error) {
       const apiError = error as ApiError;
-      // Don't show errors on initial load (might be stale token)
+
       if (!isInitialLoad) {
         toast.error(apiError.response?.data?.message || "Failed to load files");
       }
@@ -145,7 +137,7 @@ export const Dashboard: React.FC = () => {
     try {
       await fileAPI.deleteFile(fileId);
       toast.success("File deleted successfully");
-      // Refresh the file list after successful deletion
+
       await fetchFiles();
     } catch (error) {
       const apiError = error as ApiError;
@@ -205,7 +197,6 @@ export const Dashboard: React.FC = () => {
             </Link>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
               <div className="flex items-center justify-between">
@@ -254,7 +245,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Merge Anonymous Files Prompt */}
         {showMergePrompt && !isAnonymous && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -301,7 +291,6 @@ export const Dashboard: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Anonymous User Notice - When they have files */}
         {isAnonymous && files.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -335,7 +324,6 @@ export const Dashboard: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Files List */}
         {isLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>

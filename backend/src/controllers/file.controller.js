@@ -161,7 +161,6 @@ const requestFileOtp = asyncHandler(async (req, res) => {
     throw new ApiError(400, "OTP not required for this file");
   }
 
- 
   const otp = await generateOtpForFile(file);
 
   await sendOtpEmail(file.allowedEmail, otp);

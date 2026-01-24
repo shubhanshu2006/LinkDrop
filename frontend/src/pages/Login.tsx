@@ -46,7 +46,6 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl animate-float"></div>
         <div
@@ -141,7 +140,6 @@ export const Login: React.FC = () => {
         </div>
       </motion.div>
 
-     
       <SuccessModal
         isOpen={showVerifiedModal}
         onClose={() => setShowVerifiedModal(false)}

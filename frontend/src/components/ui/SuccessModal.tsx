@@ -36,7 +36,6 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          // Backdrop
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -44,7 +43,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
             onClick={onClose}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
           />
-          // Modal
+
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -53,7 +52,6 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
               transition={{ type: "spring", duration: 0.5 }}
               className="bg-dark-900 rounded-2xl premium-shadow w-full max-w-md overflow-hidden"
             >
-              // Success Icon
               <div className="flex flex-col items-center pt-8 pb-6 px-6">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -66,9 +64,9 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                     strokeWidth={2.5}
                   />
                 </motion.div>
-                // Title
+
                 <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
-                // Email Box
+
                 {email && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -87,7 +85,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                     </p>
                   </motion.div>
                 )}
-                // Message
+
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -96,7 +94,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                 >
                   {message}
                 </motion.p>
-                // Action Button
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
