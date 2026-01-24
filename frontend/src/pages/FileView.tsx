@@ -135,6 +135,7 @@ export const FileView: React.FC = () => {
       setShowOTPModal(false);
       setOtp("");
       await fetchFile();
+      setIsVerifying(false);
     } catch (error) {
       console.error("OTP Verification Error:", error);
       const apiError = error as ApiError;
