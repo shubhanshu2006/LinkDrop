@@ -95,11 +95,10 @@ const uploadFileController = asyncHandler(async (req, res) => {
 // Controller to get file content
 const getFile = asyncHandler(async (req, res) => {
   const file = req.fileDoc;
-  const user = req.user;
 
   const decision = canAccessFile({
     file,
-    user,
+    user: req.user,
     intent: "view",
   });
 
@@ -123,12 +122,12 @@ const getFile = asyncHandler(async (req, res) => {
   res.setHeader("Content-Disposition", "inline");
   res.setHeader("X-Content-Type-Options", "nosniff");
 
+  const buffer = Buffer.from(await data.arrayBuffer());
+  Readable.from(buffer).pipe(res);
+
   file.lastAccessedAt = new Date();
   file.accessCount += 1;
   await file.save({ validateBeforeSave: false });
-
-  const buffer = Buffer.from(await data.arrayBuffer());
-  res.send(buffer);
 });
 
 // Controller to get file metadata (info)
@@ -218,7 +217,6 @@ const verifyFileOtp = asyncHandler(async (req, res) => {
 });
 
 // Controller to handle file download
-
 const downloadFile = asyncHandler(async (req, res) => {
   const file = req.fileDoc;
   const intent = req.query.intent || "download";

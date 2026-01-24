@@ -146,7 +146,7 @@ export const FileView: React.FC = () => {
     }
     try {
       const response = await fileAPI.downloadFile(fileId!);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", file.originalName);
@@ -160,7 +160,7 @@ export const FileView: React.FC = () => {
     }
   };
 
-  const handleViewFile = () => {
+    const handleViewFile = () => {
     if (!fileId) return;
     const viewUrl = `${import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1"}/files/${fileId}`;
     const newWindow = window.open(viewUrl, "_blank");
@@ -194,10 +194,7 @@ export const FileView: React.FC = () => {
     try {
       const response = await fileAPI.downloadFile(fileId!, "offline");
 
-      const blob =
-        response.data instanceof Blob
-          ? new Blob([response.data], { type: file.mimeType })
-          : new Blob([response.data], { type: file.mimeType });
+      const blob = response.data;
 
       console.log("Saving blob:", {
         blobType: blob.type,

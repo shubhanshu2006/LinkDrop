@@ -104,7 +104,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/upload" element={<Upload />} />
-            <Route path="/file/:fileId" element={<FileView />} />
+            <Route path="/file/:fileId" element={<FileView />} />   
             <Route path="/offline-files" element={<OfflineFiles />} />
             <Route
               path="/dashboard"
