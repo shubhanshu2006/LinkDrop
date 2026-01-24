@@ -87,6 +87,7 @@ export const FileView: React.FC = () => {
   const fetchFile = async () => {
     try {
       const response = await fileAPI.getFile(fileId!);
+      console.log("File Data Response:", response);
       setFile(response.data.file);
 
       if (
@@ -96,6 +97,7 @@ export const FileView: React.FC = () => {
         setShowOTPModal(true);
       }
     } catch (error) {
+      console.error("Fetch File Error:", error);
       const apiError = error as ApiError;
       toast.error(apiError.response?.data?.message || "Failed to load file");
       navigate("/");
@@ -127,11 +129,14 @@ export const FileView: React.FC = () => {
 
     setIsVerifying(true);
     try {
-      await fileAPI.verifyOTP(fileId!, otp);
+      const response = await fileAPI.verifyOTP(fileId!, otp);
+      console.log("OTP Verification Response:", response);
       toast.success("OTP verified! You can now access the file");
       setShowOTPModal(false);
+      setOtp("");
       await fetchFile();
     } catch (error) {
+      console.error("OTP Verification Error:", error);
       const apiError = error as ApiError;
       toast.error(apiError.response?.data?.message || "Invalid OTP");
       setIsVerifying(false);

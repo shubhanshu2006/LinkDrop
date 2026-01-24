@@ -210,10 +210,15 @@ const verifyFileOtp = asyncHandler(async (req, res) => {
 
   await verifyOtpForFile(file, otp, file.openDuration);
 
-  res.status(200).json({
-    message: "OTP verified. Access window started.",
-    accessEndsAt: file.accessEndsAt,
-  });
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        accessEndsAt: file.accessEndsAt,
+      },
+      "OTP verified. Access window started."
+    )
+  );
 });
 
 // Controller to handle file download
