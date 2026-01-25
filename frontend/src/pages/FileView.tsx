@@ -136,12 +136,17 @@ export const FileView: React.FC = () => {
       const response = await fileAPI.verifyOTP(fileId!, otp);
       console.log("OTP Verification Response:", response);
 
-      // Fetch the updated file data to get the complete file object
-      const fileResponse = await fileAPI.getFile(fileId!);
-      console.log("Updated File Data:", fileResponse.data.file);
+      // Update file state with verification data using functional update
+      setFile((prevFile) => {
+        if (!prevFile) return prevFile;
 
-      // Update file state directly without triggering loading state
-      setFile(fileResponse.data.file);
+        return {
+          ...prevFile,
+          otpVerifiedAt: new Date().toISOString(),
+          isOpened: true,
+          accessEndsAt: response.data.accessEndsAt,
+        };
+      });
 
       toast.success("OTP verified! You can now access the file");
       setShowOTPModal(false);
