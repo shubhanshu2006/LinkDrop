@@ -55,6 +55,8 @@ export const FileView: React.FC = () => {
       return;
     }
 
+    let interval: number;
+
     const checkExpiration = () => {
       const now = Date.now();
       const expiresAt = new Date(file.accessEndsAt!).getTime();
@@ -79,7 +81,7 @@ export const FileView: React.FC = () => {
 
     checkExpiration();
 
-    const interval = setInterval(checkExpiration, 1000);
+    interval = setInterval(checkExpiration, 1000);
 
     return () => clearInterval(interval);
   }, [file, navigate, openedWindow]);
