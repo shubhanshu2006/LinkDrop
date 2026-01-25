@@ -168,6 +168,7 @@ const getFileInfo = asyncHandler(async (req, res) => {
         allowedEmail: file.allowedEmail,
         openDuration: file.openDuration,
       },
+      serverTime: new Date(),
     })
   );
 });
@@ -215,6 +216,7 @@ const verifyFileOtp = asyncHandler(async (req, res) => {
       200,
       {
         accessEndsAt: file.accessEndsAt,
+        serverTime: new Date(),
       },
       "OTP verified. Access window started."
     )

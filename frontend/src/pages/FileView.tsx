@@ -33,6 +33,7 @@ export const FileView: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRequestingOTP, setIsRequestingOTP] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [clockOffset, setClockOffset] = useState<number>(0);
   const [openedWindow, setOpenedWindow] = useState<Window | null>(null);
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -59,14 +60,16 @@ export const FileView: React.FC = () => {
 
     const checkExpiration = () => {
       const now = Date.now();
+      const serverNow = now + clockOffset;
       const expiresAt = new Date(file.accessEndsAt!).getTime();
-      const remaining = expiresAt - now;
+      const remaining = expiresAt - serverNow;
 
-      console.log("⏰ Access Window Check:", {
-        currentTime: new Date(now).toLocaleString(),
+      console.log("Access Window Check:", {
+        clientTime: new Date(now).toLocaleString(),
+        serverTimeNow: new Date(serverNow).toLocaleString(),
         expiresAt: new Date(expiresAt).toLocaleString(),
-        remainingMinutes: Math.floor(remaining / 60000),
-        remainingSeconds: Math.floor((remaining % 60000) / 1000),
+        offsetMs: clockOffset,
+        remainingSeconds: Math.floor(remaining / 1000),
       });
 
       if (remaining <= 0) {
@@ -91,7 +94,7 @@ export const FileView: React.FC = () => {
     interval = setInterval(checkExpiration, 1000);
 
     return () => clearInterval(interval);
-  }, [file, navigate, openedWindow]);
+  }, [file, navigate, openedWindow, clockOffset]);
 
   const fetchFile = async () => {
     try {
@@ -100,6 +103,12 @@ export const FileView: React.FC = () => {
       console.log("File object:", response.data.file);
       console.log("OTP Verified:", response.data.file.otpVerifiedAt);
       console.log("Access Ends:", response.data.file.accessEndsAt);
+
+      if (response.data.serverTime) {
+        const offset = new Date(response.data.serverTime).getTime() - Date.now();
+        setClockOffset(offset);
+      }
+
       setFile(response.data.file);
 
       if (
@@ -144,6 +153,11 @@ export const FileView: React.FC = () => {
     try {
       const response = await fileAPI.verifyOTP(fileId!, otp);
       console.log("OTP Verification Response:", response);
+
+      if (response.data.serverTime) {
+        const offset = new Date(response.data.serverTime).getTime() - Date.now();
+        setClockOffset(offset);
+      }
 
       // Update file state with verification data using functional update
       setFile((prevFile) => {
