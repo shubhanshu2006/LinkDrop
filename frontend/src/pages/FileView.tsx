@@ -33,7 +33,7 @@ export const FileView: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRequestingOTP, setIsRequestingOTP] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [openedWindow] = useState<Window | null>(null);
+  const [openedWindow, setOpenedWindow] = useState<Window | null>(null);
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -61,6 +61,13 @@ export const FileView: React.FC = () => {
       const now = Date.now();
       const expiresAt = new Date(file.accessEndsAt!).getTime();
       const remaining = expiresAt - now;
+
+      console.log("⏰ Access Window Check:", {
+        currentTime: new Date(now).toLocaleString(),
+        expiresAt: new Date(expiresAt).toLocaleString(),
+        remainingMinutes: Math.floor(remaining / 60000),
+        remainingSeconds: Math.floor((remaining % 60000) / 1000),
+      });
 
       if (remaining <= 0) {
         clearInterval(interval);
@@ -142,12 +149,20 @@ export const FileView: React.FC = () => {
       setFile((prevFile) => {
         if (!prevFile) return prevFile;
 
-        return {
+        const updatedFile = {
           ...prevFile,
           otpVerifiedAt: new Date().toISOString(),
           isOpened: true,
           accessEndsAt: response.data.accessEndsAt,
         };
+
+        console.log("Updated file state:", {
+          otpVerifiedAt: updatedFile.otpVerifiedAt,
+          accessEndsAt: updatedFile.accessEndsAt,
+          openDuration: updatedFile.openDuration,
+        });
+
+        return updatedFile;
       });
 
       toast.success("OTP verified! You can now access the file");
@@ -185,7 +200,10 @@ export const FileView: React.FC = () => {
 
   const handleViewFile = () => {
     if (!fileId) return;
-    window.open(`/file/${fileId}`, "_blank");
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+    const fileUrl = `${apiUrl}/files/${fileId}`;
+    const newWindow = window.open(fileUrl, "_blank");
+    setOpenedWindow(newWindow);
   };
 
   const handleSaveOffline = () => {
