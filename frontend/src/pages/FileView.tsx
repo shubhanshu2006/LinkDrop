@@ -372,8 +372,7 @@ export const FileView: React.FC = () => {
               {file.fileType === "verySensitive" ? (
                 file.otpVerifiedAt ? (
                   <>
-                    {file.accessEndsAt &&
-                      new Date(file.accessEndsAt) > new Date() ? (
+                    {file.accessEndsAt && timeRemaining > 0 ? (
                       <>
                         <div className="glass-effect-light rounded-xl p-4 mb-4">
                           <div className="flex items-center justify-between mb-2">
