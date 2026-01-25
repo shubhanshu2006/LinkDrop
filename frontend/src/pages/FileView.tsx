@@ -135,10 +135,17 @@ export const FileView: React.FC = () => {
     try {
       const response = await fileAPI.verifyOTP(fileId!, otp);
       console.log("OTP Verification Response:", response);
+
+      // Fetch the updated file data to get the complete file object
+      const fileResponse = await fileAPI.getFile(fileId!);
+      console.log("Updated File Data:", fileResponse.data.file);
+
+      // Update file state directly without triggering loading state
+      setFile(fileResponse.data.file);
+
       toast.success("OTP verified! You can now access the file");
       setShowOTPModal(false);
       setOtp("");
-      await fetchFile();
       setIsVerifying(false);
     } catch (error) {
       console.error("OTP Verification Error:", error);
@@ -271,8 +278,6 @@ export const FileView: React.FC = () => {
     return null;
   }
 
-  console.log("Rendering file view for:", file.originalName);
-
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
@@ -329,7 +334,7 @@ export const FileView: React.FC = () => {
                 file.otpVerifiedAt ? (
                   <>
                     {file.accessEndsAt &&
-                    new Date(file.accessEndsAt) > new Date() ? (
+                      new Date(file.accessEndsAt) > new Date() ? (
                       <>
                         <div className="glass-effect-light rounded-xl p-4 mb-4">
                           <div className="flex items-center justify-between mb-2">
