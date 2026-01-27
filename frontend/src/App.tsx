@@ -24,6 +24,7 @@ import { Settings } from "./pages/Settings";
 import { useAuthStore } from "./store/authStore";
 import { startAutoCleanup } from "./utils/indexedDB";
 import { Analytics } from "@vercel/analytics/react";
+import { MobileBlocker } from "./components/MobileBlocker";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -93,74 +94,76 @@ function App() {
   }
 
   return (
-    <Router>
-      <ScrollToTop />
-      <div className="min-h-screen bg-dark-950 flex flex-col">
-        <Navbar />
-        <main className="flex-1 pt-16">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/file/:fileId" element={<FileView />} />
-            <Route path="/view/:fileId" element={<FileViewer />} />
-            <Route path="/offline-files" element={<OfflineFiles />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <Admin />
-                </AdminRoute>
-              }
-            />
-          </Routes>
-        </main>
-        <Footer />
-        <Analytics />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: "#27272a",
-              color: "#f4f4f5",
-              border: "1px solid #3f3f46",
-            },
-            success: {
-              iconTheme: {
-                primary: "#ec4899",
-                secondary: "#fff",
+    <MobileBlocker>
+      <Router>
+        <ScrollToTop />
+        <div className="min-h-screen bg-dark-950 flex flex-col">
+          <Navbar />
+          <main className="flex-1 pt-16">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/file/:fileId" element={<FileView />} />
+              <Route path="/view/:fileId" element={<FileViewer />} />
+              <Route path="/offline-files" element={<OfflineFiles />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <Admin />
+                  </AdminRoute>
+                }
+              />
+            </Routes>
+          </main>
+          <Footer />
+          <Analytics />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#27272a",
+                color: "#f4f4f5",
+                border: "1px solid #3f3f46",
               },
-            },
-            error: {
-              iconTheme: {
-                primary: "#ef4444",
-                secondary: "#fff",
+              success: {
+                iconTheme: {
+                  primary: "#ec4899",
+                  secondary: "#fff",
+                },
               },
-            },
-          }}
-        />
-      </div>
-    </Router>
+              error: {
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
+        </div>
+      </Router>
+    </MobileBlocker>
   );
 }
 
