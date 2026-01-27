@@ -34,7 +34,6 @@ export const FileView: React.FC = () => {
   const [isRequestingOTP, setIsRequestingOTP] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [clockOffset, setClockOffset] = useState<number>(0);
-  const [openedWindow, setOpenedWindow] = useState<Window | null>(null);
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -67,10 +66,6 @@ export const FileView: React.FC = () => {
       if (remaining <= 0) {
         clearInterval(interval);
 
-        if (openedWindow && !openedWindow.closed) {
-          openedWindow.close();
-        }
-
         toast.error("Access window has expired");
         setTimeout(() => {
           navigate("/", { replace: true });
@@ -86,7 +81,7 @@ export const FileView: React.FC = () => {
     interval = setInterval(checkExpiration, 1000);
 
     return () => clearInterval(interval);
-  }, [file, navigate, openedWindow, clockOffset]);
+  }, [file, navigate, clockOffset]);
 
   const fetchFile = async () => {
     try {
@@ -195,11 +190,7 @@ export const FileView: React.FC = () => {
 
   const handleViewFile = () => {
     if (!fileId) return;
-    const apiUrl =
-      import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
-    const fileUrl = `${apiUrl}/files/${fileId}`;
-    const newWindow = window.open(fileUrl, "_blank");
-    setOpenedWindow(newWindow);
+    navigate(`/view/${fileId}`);
   };
 
   const handleSaveOffline = () => {
@@ -239,6 +230,7 @@ export const FileView: React.FC = () => {
         fileId!,
         file.originalName,
         file.mimeType,
+        file.fileType,
         file.size,
         blob,
         durationInMinutes,

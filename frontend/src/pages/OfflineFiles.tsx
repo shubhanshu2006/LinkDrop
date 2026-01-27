@@ -9,6 +9,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import {
@@ -33,6 +34,7 @@ export const OfflineFiles: React.FC = () => {
     percentage: 0,
   });
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   const loadFiles = async () => {
     try {
@@ -91,23 +93,9 @@ export const OfflineFiles: React.FC = () => {
     }
 
     try {
-      console.log("Viewing file:", {
-        fileName: file.fileName,
-        fileType: file.fileType,
-        blobType: file.blob.type,
-        blobSize: file.blob.size,
-      });
-
-      const blobToView = file.blob.type
-        ? file.blob
-        : new Blob([await file.blob.arrayBuffer()], { type: file.fileType });
-
-      const url = URL.createObjectURL(blobToView);
-      window.open(url, "_blank");
-
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      navigate(`/view/${file.fileId}?offlineId=${file.id}`);
     } catch (error) {
-      console.error("Failed to open file:", error);
+      console.error("Failed to navigate to viewer:", error);
       toast.error("Failed to open file");
     }
   };
@@ -274,14 +262,16 @@ export const OfflineFiles: React.FC = () => {
                           <FileText size={16} />
                           View
                         </Button>
-                        <Button
-                          onClick={() => handleDownloadFile(file)}
-                          variant="secondary"
-                          size="sm"
-                        >
-                          <Download size={16} />
-                          Download
-                        </Button>
+                        {file.securityLevel === "normal" && (
+                          <Button
+                            onClick={() => handleDownloadFile(file)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            <Download size={16} />
+                            Download
+                          </Button>
+                        )}
                         <Button
                           onClick={() => handleDeleteFile(file.id)}
                           variant="secondary"

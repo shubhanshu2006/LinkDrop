@@ -16,6 +16,7 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Upload } from "./pages/Upload";
 import { FileView } from "./pages/FileView";
+import { FileViewer } from "./pages/FileViewer";
 import { Dashboard } from "./pages/Dashboard";
 import { Admin } from "./pages/Admin";
 import { OfflineFiles } from "./pages/OfflineFiles";
@@ -104,7 +105,8 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/upload" element={<Upload />} />
-            <Route path="/file/:fileId" element={<FileView />} />   
+            <Route path="/file/:fileId" element={<FileView />} />
+            <Route path="/view/:fileId" element={<FileViewer />} />
             <Route path="/offline-files" element={<OfflineFiles />} />
             <Route
               path="/dashboard"

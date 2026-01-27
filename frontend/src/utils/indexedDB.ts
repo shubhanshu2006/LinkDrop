@@ -8,7 +8,8 @@ export interface OfflineFile {
   id: string;
   fileId: string;
   fileName: string;
-  fileType: string;
+  mimeType: string;
+  securityLevel: "normal" | "sensitive" | "verySensitive";
   fileSize: number;
   blob: Blob;
   savedAt: number; // timestamp
@@ -42,7 +43,8 @@ const initDB = (): Promise<IDBDatabase> => {
 export const saveFileOffline = async (
   fileId: string,
   fileName: string,
-  fileType: string,
+  mimeType: string,
+  securityLevel: "normal" | "sensitive" | "verySensitive",
   fileSize: number,
   blob: Blob,
   durationInMinutes: number,
@@ -59,7 +61,8 @@ export const saveFileOffline = async (
     id: `${fileId}-${now}`, // Unique ID for each save
     fileId,
     fileName,
-    fileType,
+    mimeType,
+    securityLevel,
     fileSize,
     blob,
     savedAt: now,

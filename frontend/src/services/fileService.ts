@@ -41,6 +41,14 @@ const getFile = async (fileId: string) => {
   return response.data;
 };
 
+const getFileContent = async (fileId: string) => {
+  const response = await api.get(`/files/${fileId}`, {
+    params: { intent: "view" },
+    responseType: "blob",
+  });
+  return response;
+};
+
 const downloadFile = async (fileId: string, intent?: "download" | "offline") => {
   const params = intent ? `?intent=${intent}` : "";
   const response = await api.get(`/files/${fileId}/download${params}`, {
@@ -77,6 +85,7 @@ const verifyOTP = async (fileId: string, otp: string) => {
 export const fileAPI = {
   uploadFile,
   getFile,
+  getFileContent,
   downloadFile,
   deleteFile,
   updateFileSettings,
