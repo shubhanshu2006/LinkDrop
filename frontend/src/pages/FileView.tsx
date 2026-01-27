@@ -64,14 +64,6 @@ export const FileView: React.FC = () => {
       const expiresAt = new Date(file.accessEndsAt!).getTime();
       const remaining = expiresAt - serverNow;
 
-      console.log("Access Window Check:", {
-        clientTime: new Date(now).toLocaleString(),
-        serverTimeNow: new Date(serverNow).toLocaleString(),
-        expiresAt: new Date(expiresAt).toLocaleString(),
-        offsetMs: clockOffset,
-        remainingSeconds: Math.floor(remaining / 1000),
-      });
-
       if (remaining <= 0) {
         clearInterval(interval);
 
@@ -99,13 +91,10 @@ export const FileView: React.FC = () => {
   const fetchFile = async () => {
     try {
       const response = await fileAPI.getFile(fileId!);
-      console.log("File Data Response:", response);
-      console.log("File object:", response.data.file);
-      console.log("OTP Verified:", response.data.file.otpVerifiedAt);
-      console.log("Access Ends:", response.data.file.accessEndsAt);
 
       if (response.data.serverTime) {
-        const offset = new Date(response.data.serverTime).getTime() - Date.now();
+        const offset =
+          new Date(response.data.serverTime).getTime() - Date.now();
         setClockOffset(offset);
       }
 
@@ -118,13 +107,11 @@ export const FileView: React.FC = () => {
         setShowOTPModal(true);
       }
     } catch (error) {
-      console.error("Fetch File Error:", error);
       const apiError = error as ApiError;
       toast.error(apiError.response?.data?.message || "Failed to load file");
       navigate("/");
     } finally {
       setIsLoading(false);
-      console.log("fetchFile completed, isLoading set to false");
     }
   };
 
@@ -152,10 +139,10 @@ export const FileView: React.FC = () => {
     setIsVerifying(true);
     try {
       const response = await fileAPI.verifyOTP(fileId!, otp);
-      console.log("OTP Verification Response:", response);
 
       if (response.data.serverTime) {
-        const offset = new Date(response.data.serverTime).getTime() - Date.now();
+        const offset =
+          new Date(response.data.serverTime).getTime() - Date.now();
         setClockOffset(offset);
       }
 
@@ -169,12 +156,6 @@ export const FileView: React.FC = () => {
           isOpened: true,
           accessEndsAt: response.data.accessEndsAt,
         };
-
-        console.log("Updated file state:", {
-          otpVerifiedAt: updatedFile.otpVerifiedAt,
-          accessEndsAt: updatedFile.accessEndsAt,
-          openDuration: updatedFile.openDuration,
-        });
 
         return updatedFile;
       });
@@ -214,7 +195,8 @@ export const FileView: React.FC = () => {
 
   const handleViewFile = () => {
     if (!fileId) return;
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+    const apiUrl =
+      import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
     const fileUrl = `${apiUrl}/files/${fileId}`;
     const newWindow = window.open(fileUrl, "_blank");
     setOpenedWindow(newWindow);
