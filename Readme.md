@@ -136,8 +136,8 @@ The file should never be permanently saved, and all access must end strictly at 
 
 While the link is active, the receiver can:
 
-- View the file online
-- Save the file offline on the website
+- View the file online (Shield Protocol Active)
+- Save the file offline on the website (Shield Protocol Active)
 
 The receiver **cannot choose** how long the offline copy exists.
 
@@ -227,7 +227,7 @@ If OTP is valid:
 
 While current time < access end time:
 
-- File can be viewed
+- File can be viewed (Shield Protocol Active)
 - Page refresh is allowed
 - Download is disabled
 - Offline save is disabled
@@ -249,11 +249,11 @@ Even if link expiry is later, access is permanently revoked.
 
 ## Storage and Access Matrix
 
-| Option         | Device Download | Website Offline | Duration Controlled By |
-| -------------- | --------------- | --------------- | ---------------------- |
-| Normal         | Allowed         | Allowed         | Receiver               |
-| Sensitive      | Disabled        | Allowed         | Sender (Link Expiry)   |
-| Very Sensitive | Disabled        | Disabled        | Sender (Open Duration) |
+| Option         | Device Download | Website Offline | Shield Protocol | Duration Controlled By |
+| -------------- | --------------- | --------------- | --------------- | ---------------------- |
+| Normal         | Allowed         | Allowed         | Disabled        | Receiver               |
+| Sensitive      | Disabled        | Allowed         | **Active**      | Sender (Link Expiry)   |
+| Very Sensitive | Disabled        | Disabled        | **Active**      | Sender (Open Duration) |
 
 ---
 
@@ -269,6 +269,27 @@ Even if link expiry is later, access is permanently revoked.
 - HTTP-only cookies for token storage
 - Virus scanning enforced before access
 - Disabled or infected files are blocked
+
+---
+
+## Shield Protocol (Anti-Capture Technology)
+
+For **Sensitive** and **Very Sensitive** files, LinkDrop activates the **Shield Protocol**, a multi-layered security wrapper designed to prevent unauthorized data capture:
+
+### Capture Mitigation
+- **Focus Protection**: Content is instantly blurred and hidden if the browser tab loses focus, the user switches apps, or opens browser dev tools.
+- **Hardware Shortcut Blocking**: Intercepts and blocks common system shortcuts including `PrtSc (PrintScreen)`, `Win+S`, `Ctrl+P` (Print), and `Ctrl+S` (Save).
+- **Hardened Clipboard**: Aggressively clears the system clipboard ("Content Protected") upon any screenshot attempt or focus loss.
+- **Right-Click & Selection Block**: native context menus and text selection are disabled within the secure viewer.
+- **Dynamic Watermarking**: Transparent, rotating watermarks containing the viewer's identifier are overlaid on the content.
+
+### Device Enforcement
+- **Desktop-Only Access**: To mitigate inherent screenshot vulnerabilities in mobile operating systems, the Shield Protocol restricts viewing of protected content to desktop-class browsers. 
+- **Mobile Blocking**: Mobile devices and tablets are automatically detected and blocked with a security protocol notice.
+
+### Visual Aesthetic
+- **Blurred States**: High-performance CSS blurs and overlays ensure zero-frame exposure during state transitions.
+- **Secure Viewer Route**: Dedicated `/view/:id` route that handles blob-only rendering without exposing direct file paths.
 
 ---
 
