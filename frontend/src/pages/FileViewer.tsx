@@ -16,6 +16,7 @@ export const FileViewer: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const offlineId = new URLSearchParams(location.search).get("offlineId");
+    const [clockOffset, setClockOffset] = useState<number>(0);
 
     useEffect(() => {
         const fetchFileInfo = async () => {
@@ -23,6 +24,11 @@ export const FileViewer: React.FC = () => {
             try {
                 const response = await fileAPI.getFile(fileId);
                 setFile(response.data.file);
+
+                if (response.data.serverTime) {
+                    const offset = new Date(response.data.serverTime).getTime() - Date.now();
+                    setClockOffset(offset);
+                }
 
                 // Security check: if verySensitive and not OTP verified, redirect back to info page
                 if (!offlineId && response.data.file.fileType === "verySensitive" && !response.data.file.otpVerifiedAt) {
@@ -47,9 +53,10 @@ export const FileViewer: React.FC = () => {
 
         const checkExpiration = () => {
             const now = Date.now();
+            const serverNow = now + clockOffset;
             const expiresAt = new Date(file.accessEndsAt!).getTime();
 
-            if (now >= expiresAt) {
+            if (serverNow >= expiresAt) {
                 toast.error("Access window has expired");
                 navigate(`/file/${fileId}`, { replace: true });
             }
@@ -57,7 +64,7 @@ export const FileViewer: React.FC = () => {
 
         const interval = setInterval(checkExpiration, 1000);
         return () => clearInterval(interval);
-    }, [file, fileId, navigate]);
+    }, [file, fileId, navigate, clockOffset]);
 
     if (isLoading) {
         return (
